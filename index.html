@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager App</title>
+</head>
+<body>
+    <h1>Task Manager</h1>
+    <form method="POST" action="/add">
+        <input type="text" name="task_name" placeholder="New Task" required>
+        <button type="submit">Add Task</button>
+    </form>
+
+    <h2>Task List</h2>
+    <ul>
+        {% for task in tasks %}
+            <li>
+                {{ task.name }}
+                <a href="/delete/{{ task.id }}">Delete</a>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
