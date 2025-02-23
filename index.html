@@ -3,23 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Manager App</title>
+    <title>Task Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <h1>Task Manager</h1>
-    <form method="POST" action="/add">
-        <input type="text" name="task_name" placeholder="New Task" required>
+    <form action="/add" method="POST">
+        <input type="text" name="title" placeholder="Task Title" required>
+        <textarea name="description" placeholder="Task Description"></textarea>
         <button type="submit">Add Task</button>
     </form>
-
-    <h2>Task List</h2>
     <ul>
         {% for task in tasks %}
             <li>
-                {{ task.name }}
-                <a href="/delete/{{ task.id }}">Delete</a>
+                <strong>{{ task.title }}</strong>
+                <p>{{ task.description }}</p>
+                <form action="/update/{{ task.id }}" method="POST">
+                    <button type="submit">{{ 'Mark as Done' if not task.done else 'Mark as Not Done' }}</button>
+                </form>
+                <form action="/delete/{{ task.id }}" method="POST">
+                    <button type="submit">Delete</button>
+                </form>
             </li>
         {% endfor %}
     </ul>
 </body>
 </html>
+
