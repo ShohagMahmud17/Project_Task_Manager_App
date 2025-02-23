@@ -1,43 +1,44 @@
 from flask import Flask, render_template, request, redirect, url_for
-import sqlite3
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:password@mysql:3306/taskdb'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 
-# SQLite database configuration
-DATABASE = 'tasks.db'
-
-def get_db():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    return conn
+class Task(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(200), nullable=True)
+    done = db.Column(db.Boolean, default=False)
 
 @app.route('/')
 def index():
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM tasks")
-    tasks = cur.fetchall()
-    conn.close()
+    tasks = Task.query.all()
     return render_template('index.html', tasks=tasks)
 
 @app.route('/add', methods=['POST'])
 def add_task():
-    task_name = request.form['task_name']
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("INSERT INTO tasks (name) VALUES (?)", (task_name,))
-    conn.commit()
-    conn.close()
+    title = request.form['title']
+    description = request.form.get('description', '')
+    task = Task(title=title, description=description)
+    db.session.add(task)
+    db.session.commit()
     return redirect(url_for('index'))
 
-@app.route('/delete/<int:task_id>')
-def delete_task(task_id):
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
-    conn.commit()
-    conn.close()
+@app.route('/update/<int:id>', methods=['POST'])
+def update_task(id):
+    task = Task.query.get(id)
+    task.done = not task.done
+    db.session.commit()
+    return redirect(url_for('index'))
+
+@app.route('/delete/<int:id>', methods=['POST'])
+def delete_task(id):
+    task = Task.query.get(id)
+    db.session.delete(task)
+    db.session.commit()
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host="0.0.0.0")
